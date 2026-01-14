@@ -198,14 +198,25 @@ pop_tabs <- toc_txt |>
 
 
 ## oppgave 2
+
 ###(i)
+
 ```{r}
 pop_tabs |>
   filter(
     str_detect(title, regex("population", ignore_case = TRUE)) &
     str_detect(title, regex("NUTS\\s*3", ignore_case = TRUE))
-  )
-
+  ) |> 
+  flextable() |> 
+  # for tabeller pdf (latex)
+  set_table_properties(
+    opts_pdf = list(
+      # default is 1.5
+      arraystretch = 1.0
+    )
+  ) |> 
+  line_spacing(space = 0.5) |> 
+  autofit()
 ```
 
 ```{r}
@@ -221,6 +232,7 @@ pop_tabs |>
 Finner at koden er demo_r_pjanaggr3 for tabellen med forklarende tekst «Average annual population to calculate regional GDP data (thousand persons) by NUTS 3 regions»
 
 ###(ii)
+
 Last ned Data Structure Definition (DSD) for denne tabellen.
 ```{r}
 dsd_pop <- get_eurostat_dsd("demo_r_pjanaggr3")
@@ -254,7 +266,9 @@ dim(pop)
 ```
 
 ## Oppgave 3
+
 Slå sammen GDP-data (gdp) og befolkingsdata (pop)
+
 ```{r}
 gdp_pop <- gdp |>
   left_join(pop, by = c("geo", "time"))
@@ -264,8 +278,12 @@ Kontrollerer:
 
 ```{r}
 dim(gdp_pop)
+```
+
+```{r}
 head(gdp_pop)
 ```
+
 
 Gjør følgende tilpasning av gdp_pop:
 ```{r}
@@ -351,6 +369,49 @@ eu_data |>
   arrange(desc(num_nuts3)) # Gir mest informative oversikt, legger det største landet øverst
 ```
 
+```{r}
+#| message: false
+eu_data |>
+  select(nc, n3) |> # Henter ut de variablene vi trenger
+  distinct() |> # Fjerner duplikater 
+  group_by(nc) |> # Grupperer per land
+  summarise(
+    num_nuts3 = n(),
+    .groups = "drop"
+  ) |>
+  arrange(desc(num_nuts3)) %>%
+  # legger til 3 tomme rekker for å få 32
+  add_row(
+    nc = rep(NA, 3), 
+    num_nuts3 = rep(NA, 3)) %>% 
+  {
+    list(
+      s1 = slice(., 1:8),
+      s2 = slice(., 9:16),
+      s3 = slice(., 17:24),
+      s4 = slice(., 25:32)
+    )
+  } |> 
+  bind_cols() |> 
+  flextable() |> 
+  fontsize(size = 9, part = "all") |> 
+  line_spacing(space = 0.85) |> 
+  set_header_labels(
+    nc...1 = "Land",
+    num_nuts3...2 = "Antall\nnuts3\nregioner",
+    nc...3 = "Land",
+    num_nuts3...4 = "Antall\nnuts3\nregioner",
+    nc...5 = "Land",
+    num_nuts3...6 = "Antall\nnuts3\nregioner",
+    nc...7 = "Land",
+    num_nuts3...8 = "Antall\nnuts3\nregioner"
+  ) |> 
+  padding(j = c(2, 4, 6, 8), padding.right = 30, part = "all") |> 
+  align(j = c(2, 4, 6, 8), align = "center", part = "all") |> 
+  width(j = c(1, 3, 5, 7), width = 0.4)
+```
+
+
 ## Oppgave 7
 Sjekker summary for gdp_pc_n3 for å se om hva som er har den største og minste verdien og om det er noen NA:
 ```{r}
@@ -401,10 +462,45 @@ eu_data <- eu_data |>
 ```
 Kontrollerer:
 ```{r}
+#| message: false
+# ag: når vi vet hvordan vi skal gjøre det er det relativt lett
+# å lage en kompakt velformatert tabell
 eu_data |> 
   select(nc_name, nc) |> 
   distinct() |> 
-  print(n = 30)
+  #print(n = 30)
+  # trenger 3 tomme for å få 32
+    add_row(
+    nc_name = rep(NA, 3), 
+    nc = rep(NA, 3)
+    ) %>% 
+  {
+    list(
+      s1 = slice(., 1:8),
+      s2 = slice(., 9:16),
+      s3 = slice(., 17:24),
+      s4 = slice(., 25:32)
+    )
+  } |> 
+  bind_cols() |> 
+  flextable() |> 
+  fontsize(size = 9, part = "all") |> 
+  line_spacing(space = 0.85) |> 
+  set_header_labels(
+    nc_name...1 = "Land",
+    nc...2 = "Land\nkode",
+    nc_name...3 = "Land",
+    nc...4 = "Land\nkode",
+    nc_name...5 = "Land",
+    nc...6 = "Land\nkode",
+    nc_name...7 = "Land",
+    nc...8 = "Land\nkode"
+  ) |> 
+  padding(j = c(2, 4, 6, 8), padding.right = 30, part = "all") |> 
+  align(j = c(2, 4, 6, 8), align = "center", part = "all") |> 
+  width(j = c(1, 3, 7), width = 0.6) |> 
+  width(j = 8, width = 0.8) |> 
+  width(j = c(2, 4, 6, 8), width = 0.3)
 ```
 
 # Beregning av Gini på NUTS2, NUTS1 og NUTSc nivå
@@ -673,6 +769,53 @@ gini_2022 |>
   autofit()
 
 ```
+
+
+```{r}
+#| message: false
+# ag: kompakt alternativ
+gini_2022  |> 
+  mutate(gini_nc = round(gini_nc, 3))  %>% 
+# 28 = 4 * 7
+    {
+    list(
+      s1 = slice(., 1:7),
+      s2 = slice(., 8:14),
+      s3 = slice(., 15:21),
+      s4 = slice(., 22:28)
+    )
+  } |> 
+  bind_cols() |> 
+  flextable() |> 
+  # ag: for pdf (latex) som ikke aksepterer
+  # line_spacing()
+  set_table_properties(
+    opts_pdf = list(
+      # arraystretch = 1.5 default som gir veldig 
+      # stor avstand
+      arraystretch = 1.1
+    )
+  ) |> 
+  fontsize(size = 9, part = "all") |> 
+  line_spacing(space = 0.85) |> 
+  set_header_labels(
+    nc_name...1 = "Land",
+    gini_nc...2 = "Gini\nkoeff.",
+    nc_name...3 = "Land",
+    gini_nc...4 = "Gini\nkoeff.",
+    nc_name...5 = "Land",
+    gini_nc...6 = "Gini\nkoeff.",
+    nc_name...7 = "Land",
+    gini_nc...8 = "Gini\nkoeff."
+  ) |> 
+  align(j = c(2, 4, 6, 8), align = "center", part = "all") |> 
+  width(j = c(1, 3, 7), width = 0.6) |> 
+  width(j = 8, width = 0.8) |> 
+  width(j = c(2, 4, 6, 8), width = 0.4)
+```
+
+
+
 
 ## Oppgave 23
 

@@ -1,0 +1,15 @@
+---
+title: "ag comments"
+format: html
+editor: source
+---
+
+## Generelle kommentarer
+
+- Dette har dere fikset fint
+- Her er mange store tabeller som kan være litt utfordrende å håndtere. Jeg har lagt inn litt kode for å vise hvordan dette kan hånteres. Se spesielt:
+- `set_table_ properties(opts_pdf = list(arraystrech = 1.0))` eneste besvergelsen jeg har funnet som faktisk gir tabeller i pdf (latex) uten ekstremt stor avstand mellom linjene.
+- Se bruk av konstruksjonen `{list(s1 = slice(., 1:5), s2 = slice(., 6:10))} |>  bind_cols()` får å kutte en tibble i pipen opp i like lange biter og så lime dem sammen igjen horisontalt. Dette gir oss muligheten til å lage mer kompakte tabeller.
+- Se også bruken av `add_row()` for å legge til tomme rekker til en tibble. Dette for å få et antall som er lettere å splitte opp. F.eks 29 + 3 tomme = 32 = 4 * 8
+
+
